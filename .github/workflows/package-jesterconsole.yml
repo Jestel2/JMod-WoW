@@ -1,0 +1,58 @@
+name: Package JesterConsole addon
+
+on:
+  push:
+    branches:
+      - feature/jesterconsole-download
+      - feature/jmod-family-server
+    paths:
+      - "jc/JesterConsole/**"
+      - ".github/workflows/package-jesterconsole.yml"
+  pull_request:
+    branches:
+      - feature/jmod-family-server
+    paths:
+      - "jc/JesterConsole/**"
+      - ".github/workflows/package-jesterconsole.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Build client addon ZIP
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Validate addon files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s jc/JesterConsole/JesterConsole.toc
+          grep -q '^## Interface: 30300$' jc/JesterConsole/JesterConsole.toc
+          grep -q '^JesterFamily.lua$' jc/JesterConsole/JesterConsole.toc
+          for file in Bindings.xml JesterConsole.lua JesterFamily.lua JesterConsole.toc; do
+            test -s "jc/JesterConsole/$file"
+          done
+
+      - name: Build versioned ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's/^## Version: //p' jc/JesterConsole/JesterConsole.toc | head -n 1)"
+          test -n "$version"
+          mkdir -p package/JesterConsole dist
+          cp -a jc/JesterConsole/. package/JesterConsole/
+          (cd package && zip -qr "../dist/JesterConsole-$version.zip" JesterConsole)
+          test -s "dist/JesterConsole-$version.zip"
+
+      - name: Publish downloadable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: JesterConsole-${{ github.ref_name }}
+          path: dist/JesterConsole-*.zip
+          if-no-files-found: error
+          retention-days: 90
