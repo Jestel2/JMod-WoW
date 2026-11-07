@@ -656,3 +656,35 @@ Examples:
 The finished system should feel like a lightly populated persistent WotLK realm rather than a single-player server with background NPCs.
 
 A human player should be able to log in and observe simulated players leveling, gathering, traveling, grouping, participating in the economy, joining events, and appearing repeatedly over time, while the operator retains clear limits, metrics, auditability, and an immediate off switch.
+
+## Upstream Playerbot and City Life integration baseline (reviewed 2026-11-07)
+
+Reuse the existing server-side bot projects; do not implement bot navigation, combat AI, questing, or gathering from scratch.
+
+### Pinned candidate components
+
+- Core: [mod-playerbots AzerothCore fork](https://github.com/mod-playerbots/azerothcore-wotlk/tree/Playerbot), branch `Playerbot`, reviewed at `e7e2e288e7d9ec30e2dfe6f417178a95986fcbb2`.
+- Bot engine: [mod-playerbots](https://github.com/mod-playerbots/mod-playerbots), reviewed at `405f81196161017eebae3ee7a612d786a3ed2a9d`. Its random bots support population, leveling, questing, grinding, gear upgrades, groups/raids/battlegrounds, and profession gathering.
+- City residents: [mod-playerbots-city-life](https://github.com/chenyifeiai/mod-playerbots-city-life), branch `main`, reviewed at `ce6a05df450f04c4961d09254ad73cf11f1afee2`. It distributes already-online random bots among configured hubs, with weighted hotspots, gradual/time-based population changes, roaming and limited social emotes. It does not create bots or operate the auction-house economy.
+- Existing family module source remains in [JMod-WoW](https://github.com/Jestel2/JMod-WoW/tree/feature/jmod-family-server/server/modules/mod-jmod-family) at branch head `3f43e1df56c5de0ff86680ef13854452fbc256ed`. Preserve and rebuild it with the existing `mod-autobalance` module; record and verify the exact AutoBalance revision from the live build before compiling.
+
+These revisions are research pins, not production approvals. Refresh them and review upstream changes before each candidate build.
+
+### Core compatibility boundary
+
+The Playerbots project states that its module requires the Playerbot core fork; the standard AzerothCore repository is unsupported. The current JMod build notes record core pin `9d139488`. GitHub currently reports the Playerbot branch and that pin as diverged (632 commits exclusive to the Playerbot side and 21 commits exclusive to the current pin): [compare](https://github.com/mod-playerbots/azerothcore-wotlk/compare/9d139488...Playerbot).
+
+Therefore build a separate candidate from the Playerbot fork, then port and compile the JMod family and AutoBalance modules against it. Do not try to load Playerbots into the existing production core image or merge the core histories blindly.
+
+### City Life dependency and installation
+
+City Life requires both the Playerbot core fork and `mod-playerbots`. Its version 0.2.0 includes seeded city/town/social hubs, scheduled population scaling, weighted hotspots, a global population cap, and reserved Wintergrasp residents. It borrows bots from the Playerbots online random-bot pool; it cannot create that pool. Its WORLD SQL and module configuration belong only in the isolated candidate database/build until validated.
+
+### Staged rollout gates
+
+1. Record the live core image, module revisions, database sizes, resource headroom and backups; use an isolated staging database and candidate images.
+2. Build the Playerbot fork with Playerbots, the current JMod family module and AutoBalance. Explicitly override upstream population defaults: the sample Playerbots config defaults to 500 random bots. Use the roadmap's 20–30 bot burn-in only after checking host capacity.
+3. Verify population rotation, movement, travel, questing/grinding, death/recovery, repairs/training and gathering. Start by measuring mining/herbalism behavior; do not enable an auction-house market maker or inject items as part of the first farming test.
+4. Test human login, parties, family travel and AutoBalance with bots present. Record worldserver CPU/memory, database load, errors and material/gold changes.
+5. Add City Life to that candidate, apply its WORLD SQL to the staging copy, and validate hub caps, faction/level filters, scheduled arrivals/departures and no duplicate bot reservations.
+6. Expand the economy, dungeon/battleground filling, guilds, and social layers as separate feature flags with observable limits and a global stop control. Promote the candidate only after staging acceptance and a separately approved production cutover/rollback plan.
