@@ -1,44 +1,27 @@
-JesterConsole 1.0.1
-===================
+JesterConsole for WoW 3.3.5a
 
-PATCH
------
-Version 1.0.1 fixes a WoW 3.3.5a Lua load error:
+DOWNLOAD
+--------
+Open the GitHub Actions workflow:
+https://github.com/Jestel2/JMod-WoW/actions/workflows/package-jesterconsole.yml
 
-  JesterConsoleInput doesn't have a "OnArrowPressed" script
-
-WoW 3.3.5a does not expose that EditBox script handler. Command history now
-uses OnKeyDown instead.
+Choose the latest successful "Package JesterConsole addon" run for the
+feature/jesterconsole-download branch, then download its JesterConsole artifact.
+The artifact contains a versioned ZIP with the complete addon folder.
 
 INSTALL / UPGRADE
 -----------------
-Replace the existing JesterConsole folder with this one:
-
-D:\JesterCraft_3.3.5a\JesterCraft_3.3.5a\Interface\AddOns\JesterConsole
-
-Then fully restart WoW or use /reload after replacing the files.
+1. Extract the ZIP. It contains a JesterConsole folder.
+2. Copy that folder into your WoW 3.3.5a client's Interface\AddOns directory.
+   The final path must end with Interface\AddOns\JesterConsole\JesterConsole.toc.
+3. Replace the existing JesterConsole folder if prompted. This does not touch
+   your WoW account settings under WTF.
+4. Start WoW or use /reload.
 
 TEST
 ----
-/jc
+/jc      Open JesterConsole
+/family  Open family travel
+/guide   Open the quest guide
 
-If the window opens, the addon loaded.
-
-TILDE KEY
----------
-Go to:
-  Esc -> Key Bindings
-
-Find:
-  JesterConsole
-  JesterConsole Toggle
-
-Bind it to the grave / tilde key manually.
-
-COMMAND EXAMPLES
-----------------
-bags
-shadowmourne
-benediction
-item 41600 4
-.additem 41600 4
+Quest map pins require the separate Questie-335 addon; it is not bundled here.
