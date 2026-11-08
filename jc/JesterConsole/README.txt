@@ -24,4 +24,13 @@ TEST
 /family  Open family travel
 /guide   Open the quest guide
 
-Quest map pins require the separate Questie-335 addon; it is not bundled here.
+QUEST NAVIGATION
+----------------
+1. Install Questie-335 and TomTom for the WoW 3.3.5a client. Neither addon is
+   bundled with JesterConsole.
+2. Open /guide, select a quest, and click "Track + Route Help".
+3. In Questie's tracker, right-click the quest or an unfinished objective and
+   choose "Point arrow towards objective". TomTom displays the direction arrow.
+
+Questie provides quest locations; JesterConsole does not invent coordinates.
+The guide shows which navigation addon is missing if the arrow tools are not ready.
