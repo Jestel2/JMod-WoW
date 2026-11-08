@@ -52,7 +52,7 @@ jobs:
       - name: Publish downloadable artifact
         uses: actions/upload-artifact@v4
         with:
-          name: JesterConsole-${{ github.ref_name }}
+          name: JesterConsole
           path: dist/JesterConsole-*.zip
           if-no-files-found: error
           retention-days: 90
