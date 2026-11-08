@@ -171,9 +171,8 @@ function JesterFamily_Show()
     if family:IsShown() then family:Hide() else family:Show() end
 end
 
--- The 3.3.5a client has quest titles and objectives, but no full world quest
--- coordinate database. Questie-335 provides the missing map pins and TomTom
--- can supply an arrow; do not invent waypoints from quest titles.
+-- Quest locations come from Questie-335; TomTom supplies the direction arrow.
+-- JesterConsole does not guess coordinates from quest names.
 local guide = Panel("JesterQuestGuidePanel", "Quest Guide - What Do I Do Next?", 500, 450)
 local guideStatus = guide:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 guideStatus:SetPoint("TOPLEFT", guide, "TOPLEFT", 18, -45)
@@ -192,13 +191,26 @@ objectives:SetJustifyV("TOP")
 objectives:SetHeight(72)
 objectives:SetText("Choose a quest to see what still needs to be done.")
 
-local function QuestStatus()
-    local questie = (IsAddOnLoaded and (IsAddOnLoaded("Questie") or
+local function QuestieLoaded()
+    return (IsAddOnLoaded and (IsAddOnLoaded("Questie") or
         IsAddOnLoaded("Questie-335"))) or type(Questie) == "table"
-    if questie then
-        guideStatus:SetText("|cff80ff80Questie installed:|r quest locations are on your world map.")
+end
+
+local function TomTomLoaded()
+    return (IsAddOnLoaded and IsAddOnLoaded("TomTom")) or type(TomTom) == "table"
+end
+
+local function QuestStatus()
+    local questie = QuestieLoaded()
+    local tomtom = TomTomLoaded()
+    guideStatus:SetHeight(28)
+    guideStatus:SetJustifyV("TOP")
+    if questie and tomtom then
+        guideStatus:SetText("|cff80ff80Route tools ready:|r right-click a quest or objective in Questie's tracker for an arrow.")
+    elseif questie then
+        guideStatus:SetText("|cffffff55Questie pins are ready; install TomTom to show a direction arrow.|r")
     else
-        guideStatus:SetText("|cffffff55Install Questie-335 for exact quest locations on the map.|r")
+        guideStatus:SetText("|cffffff55Install Questie-335 for quest pins and TomTom for the direction arrow.|r")
     end
 end
 
@@ -251,15 +263,21 @@ Button(guide, "Next", 116, -365, 92, function()
     page = page + 1
     RefreshGuide()
 end)
-Button(guide, "Track Quest", 213, -365, 115, function()
+Button(guide, "Track + Route Help", 213, -365, 126, function()
     if selectedQuest then
         AddQuestWatch(selectedQuest)
-        Message("Tracking quest. Use the map for Questie pins.")
+        if QuestieLoaded() and TomTomLoaded() then
+            Message("Quest tracked. Right-click it or an unfinished objective in Questie's tracker, then choose 'Point arrow towards objective'.")
+        elseif QuestieLoaded() then
+            Message("Quest tracked. Install TomTom for a direction arrow; Questie can still show map pins.")
+        else
+            Message("Quest tracked. Install Questie-335 for quest locations and TomTom for a direction arrow.")
+        end
     else
         Message("Select a quest first.")
     end
 end)
-Button(guide, "Open Map", 334, -365, 148, function()
+Button(guide, "Open Map", 345, -365, 137, function()
     if ToggleWorldMap then ToggleWorldMap() end
 end)
 Button(guide, "Refresh", 18, -400, 120, RefreshGuide)
